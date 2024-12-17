@@ -4,6 +4,7 @@ use tracing::info;
 
 /// Structure that records each operation within `bench` method and writes the output to a CSV
 /// file.
+#[derive(Clone, Debug)]
 pub struct Benchmarker {
     csv_path: PathBuf,
 }
