@@ -1,0 +1,13 @@
+[package]
+name = "benchmark-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.94"
+csv = "1.3.1"
+envconfig = "0.11.0"
+tracing = "0.1.41"
+
+[dev-dependencies]
+testfile = "0.1.5"
