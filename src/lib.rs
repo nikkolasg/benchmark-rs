@@ -13,7 +13,7 @@ pub struct Benchmarker {
 const DEFAULT_BENCH_FILE: &str = "bench.csv";
 
 impl Benchmarker {
-    pub fn new_from_path(prefix: &str, path: PathBuf) -> Result<Self> {
+    pub fn new_from_path(path: PathBuf) -> Result<Self> {
         if !path.exists() {
             // only write the header if the file doesn't exists
             let writer = File::options().create(true).append(true).open(&path)?;
@@ -22,9 +22,15 @@ impl Benchmarker {
         }
         info!("Benchmarker setup to write output in {:?}", path);
         Ok(Self {
-            prefix: prefix.to_string(),
+            prefix: "".to_string(),
             csv_path: path,
         })
+    }
+
+    pub fn with_prefix(&self, prefix: &str) -> Self {
+        let mut new = self.clone();
+        new.prefix = prefix.to_string();
+        new
     }
 
     pub fn bench<F, O>(&self, name: &str, f: F) -> Result<O>
@@ -61,7 +67,7 @@ mod test {
     #[test]
     fn benchmarker() -> Result<()> {
         let path = testfile::generate_name();
-        let b = Benchmarker::new_from_path("bou", path.clone())?;
+        let b = Benchmarker::new_from_path(path.clone())?;
         b.bench("test_fun", || {
             let _total: u32 = (0..10000).sum();
             Ok(())
