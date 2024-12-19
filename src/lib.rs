@@ -7,12 +7,13 @@ use tracing::info;
 #[derive(Clone, Debug)]
 pub struct Benchmarker {
     csv_path: PathBuf,
+    prefix: String,
 }
 
 const DEFAULT_BENCH_FILE: &str = "bench.csv";
 
 impl Benchmarker {
-    pub fn new_from_path(path: PathBuf) -> Result<Self> {
+    pub fn new_from_path(prefix: &str, path: PathBuf) -> Result<Self> {
         if !path.exists() {
             // only write the header if the file doesn't exists
             let writer = File::options().create(true).append(true).open(&path)?;
@@ -20,7 +21,10 @@ impl Benchmarker {
             wtr.write_record(["name", "time"])?;
         }
         info!("Benchmarker setup to write output in {:?}", path);
-        Ok(Self { csv_path: path })
+        Ok(Self {
+            prefix: prefix.to_string(),
+            csv_path: path,
+        })
     }
 
     pub fn bench<F, O>(&self, name: &str, f: F) -> Result<O>
@@ -37,7 +41,12 @@ impl Benchmarker {
     pub fn write_to_csv(&self, name: &str, elapsed: u128) -> Result<()> {
         let writer = File::options().append(true).open(&self.csv_path)?;
         let mut wtr = csv::Writer::from_writer(writer);
-        wtr.write_record([name, &elapsed.to_string()])?;
+        let final_name = if self.prefix.is_empty() {
+            name.to_string()
+        } else {
+            self.prefix.clone() + "-" + name
+        };
+        wtr.write_record([final_name, elapsed.to_string()])?;
         wtr.flush()?;
         Ok(())
     }
@@ -52,7 +61,7 @@ mod test {
     #[test]
     fn benchmarker() -> Result<()> {
         let path = testfile::generate_name();
-        let b = Benchmarker::new_from_path(path.clone())?;
+        let b = Benchmarker::new_from_path("bou", path.clone())?;
         b.bench("test_fun", || {
             let _total: u32 = (0..10000).sum();
             Ok(())
